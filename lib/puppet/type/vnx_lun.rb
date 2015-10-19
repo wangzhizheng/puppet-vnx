@@ -14,6 +14,13 @@ Puppet::Type.newtype(:vnx_lun) do
     end
   end
 
+  newparam(:lun_name) do
+    desc "The LUN name"
+    validate do |value|
+      fail("LUN name cannot exceed 64 characters") unless value.length <= 64
+    end
+  end
+
   newparam(:primary_lun_number) do
     desc "The primary LUN number"
   end
@@ -32,7 +39,7 @@ Puppet::Type.newtype(:vnx_lun) do
 
   newparam(:type) do
     desc "LUN type, THIN or Thick. Unchangeable once created."
-    newvalues(:thin, :nonthin, :snap)
+    newvalues(:THIN, :NONTHIN, :VNXSnap)
   end
 
   newproperty(:capacity) do
@@ -100,7 +107,7 @@ Puppet::Type.newtype(:vnx_lun) do
   newproperty(:default_owner) do
     desc "Default Service Port the LUN belong to"
 
-    newvalues(:a, :b)
+    newvalues(:A, :B)
   end
 
   #============Read Only Properties=============#

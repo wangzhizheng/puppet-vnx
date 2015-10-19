@@ -31,67 +31,67 @@ Puppet::Type.type(:vnx_nqm).provide(:vnx_nqm) do
     nqm = {}
     nqm_info.split("\n").each do |line|
 
-      if (pattern == "Name:") && line.start_with?(pattern)
+      if (pattern = "Name:") && line.start_with?(pattern)
         nqm[:ioclass] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Current State:") && line.start_with?(pattern)
+      if (pattern = "Current State:") && line.start_with?(pattern)
         nqm[:current_state] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Status:") && line.start_with?(pattern)
+      if (pattern = "Status:") && line.start_with?(pattern)
         nqm[:status] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Number of LUN(s):") && line.start_with?(pattern)
+      if (pattern = "Number of LUN(s):") && line.start_with?(pattern)
         nqm[:number_of_luns] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      if (pattern == "LUN Number:") && line.start_with?(pattern)
+      if (pattern = "LUN Number:") && line.start_with?(pattern)
         nqm[:lun_number] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      if (pattern == "LUN Name:") && line.start_with?(pattern)
+      if (pattern = "LUN Name:") && line.start_with?(pattern)
         nqm[:lun_name] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      if (pattern == "LUN WWN:") && line.start_with?(pattern)
+      if (pattern = "LUN WWN:") && line.start_with?(pattern)
         nqm[:lun_wwn] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "RAID Type:") && line.start_with?(pattern)
+      if (pattern = "RAID Type:") && line.start_with?(pattern)
         nqm[:raid_type] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "IO Type:") && line.start_with?(pattern)
+      if (pattern = "IO Type:") && line.start_with?(pattern)
         nqm[:io_type] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "IO Size Range:") && line.start_with?(pattern)
+      if (pattern = "IO Size Range:") && line.start_with?(pattern)
         nqm[:io_size_range] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Control Method:") && line.start_with?(pattern)
+      if (pattern = "Control Method:") && line.start_with?(pattern)
         nqm[:control_method] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Metric Type:") && line.start_with?(pattern)
+      if (pattern = "Metric Type:") && line.start_with?(pattern)
         nqm[:metric_type] = line.sub(pattern, "").strip
         next
       end
 
-      if (pattern == "Goal Value:") && line.start_with?(pattern)
+      if (pattern = "Goal Value:") && line.start_with?(pattern)
         nqm[:goal_value] = line.sub(pattern, "").strip
         next
       end
@@ -152,6 +152,11 @@ Puppet::Type.type(:vnx_nqm).provide(:vnx_nqm) do
   #  ioclass_list = get_file_as_string(f_name)
   #  ioclass_list = ioclass_list.gsub("\n", ' ')
     args = ['nqm', '-policy', '-create', '-name', resource[:policy_name], '-ioclasses', *$ioClass]
+    #args << "-ioclasses" << ioclass_list
+    #puts "wzz debug #{$ioClass.join(' ')}"
+    #puts "wzz debug #{args}"
+    #args << "-ioclasses" << $ioClass.join(' ')
+    #puts "wzz debug #{args}"
     args << "-failaction" << resource[:fail_action]
     run(args)
     @property_hash[:ensure] = :present
@@ -196,9 +201,10 @@ Puppet::Type.type(:vnx_nqm).provide(:vnx_nqm) do
       if resource[:ioclass]
         create_ioclass
       else
-		create_policy
-		run_policy
+	create_policy
+	run_policy
       end
+
     end
   end
 end

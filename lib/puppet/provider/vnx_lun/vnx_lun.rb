@@ -20,33 +20,29 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
   end
 
   def get_current_properties
-    lun_info = run(["lun", "-list", "-name", resource[:name]])
+    lun_info = run(["lun", "-list", "-name", resource[:lun_name]])
     self.class.get_lun_properties lun_info
   end
 
   def self.get_lun_properties lun_info
     lun = {}
     lun_info.split("\n").each do |line|
-      pattern = "LOGICAL UNIT NUMBER"
-      if line.start_with?(pattern)
+      if (pattern = "LOGICAL UNIT NUMBER") && line.start_with?(pattern)
         lun[:lun_number] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      pattern = "Name:"
-      if line.start_with?(pattern)
-        lun[:name] = line.sub(pattern, "").strip
+      if (pattern = "Name:") && line.start_with?(pattern)
+        lun[:lun_name] = line.sub(pattern, "").strip
         next
       end
 
-      pattern = "UID:"
-      if line.start_with?(pattern)
+      if (pattern = "UID:") && line.start_with?(pattern)
         lun[:uid] = line.sub(pattern, "").strip
         next
       end
 
-      pattern = "Current Owner:"
-      if line.start_with?(pattern)
+      if (pattern = "Current Owner:") && line.start_with?(pattern)
         owner = line.sub(pattern, "").strip
         owner = if owner == "SP A"
           :a
@@ -59,8 +55,7 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
         next
       end
 
-      pattern = "Default Owner:"
-      if line.start_with?(pattern)
+      if (pattern = "Default Owner:") && line.start_with?(pattern)
         owner = line.sub(pattern, "").strip
         owner = if owner == "SP A"
           :a
@@ -73,8 +68,7 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
         next
       end
 
-      pattern = "Allocation Owner:"
-      if line.start_with?(pattern)
+      if (pattern = "Allocation Owner:") && line.start_with?(pattern)
         owner = line.sub(pattern, "").strip
         owner = if owner == "SP A"
           :a
@@ -87,71 +81,60 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
         next
       end
 
-      pattern = "User Capacity (Blocks):"
-      if line.start_with?(pattern)
+      if (pattern = "User Capacity (Blocks):") && line.start_with?(pattern)
         lun[:user_capacity_blocks] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      pattern = /\AUser Capacity \((\w+)\):(.+)/
-      if line =~ pattern
+      if (pattern = /\AUser Capacity \((\w+)\):(.+)/) && line =~ pattern
         lun[:capacity] = $2.strip.to_i
         sq = $1.downcase
         lun[:size_qual] = [:gb, :tb, :mb, :bc].find{|v| sq.include? v.to_s}
         next
       end
 
-      pattern = "Consumed Capacity (Blocks):"
-      if line.start_with?(pattern)
+      if (pattern = "Consumed Capacity (Blocks):") && line.start_with?(pattern)
         lun[:consumed_capacity_blocks] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      pattern = /\AConsumed Capacity \((\w+)\):(.+)/
-      if line =~ pattern
+      if (pattern = /\AConsumed Capacity \((\w+)\):(.+)/) && line =~ pattern
         lun[:consumed_capacity] = $2.strip.to_f
         next
       end
 
-      pattern = "Pool Name:"
-      if line.start_with?(pattern)
+      if (pattern = "Pool Name:") && line.start_with?(pattern)
         lun[:pool_name] = line.sub(pattern, "").strip
         next
       end
 
-      pattern = "Offset:"
-      if line.start_with?(pattern)
+      if (pattern = "Offset:") && line.start_with?(pattern)
         lun[:offset] = line.sub(pattern, "").strip.to_i
         next
       end
 
-      pattern = "Auto-Assign Enabled:"
-      if line.start_with?(pattern)
+      if (pattern = "Auto-Assign Enabled:") && line.start_with?(pattern)
         lun[:auto_assign] = (line.sub(pattern, "").strip == "DISABLED" ? :false : :true)
         next
       end
 
-      pattern = "Raid Type:"
-      if line.start_with?(pattern)
+      if (pattern = "Raid Type:") && line.start_with?(pattern)
         lun[:raid_type] = line.sub(pattern, "").strip
         next
       end
 
-      pattern = "Is Pool LUN:"
-      if line.start_with?(pattern)
+      if (pattern = "Is Pool LUN:") && line.start_with?(pattern)
         lun[:is_pool_lun] = (line.sub(pattern, "").strip == "Yes" ? :true : :false)
         next
       end
 
-      pattern = "Is Thin LUN:"
-      if line.start_with?(pattern)
+      if (pattern = "Is Thin LUN:") && line.start_with?(pattern)
         lun[:is_thin_lun] = (line.sub(pattern, "").strip == "Yes" ? :true : :false)
         lun[:type] = (lun[:is_thin_lun] == :true ? :thin : :nonthin)
         next
       end
 
-      pattern = "Tiering Policy:"
-      if line.start_with?(pattern)
+      if (pattern = "Tiering Policy:") && line.start_with?(pattern)
         result = line.sub(pattern, "").strip.downcase
         result = if result.include? "auto"
                     :auto_tier
@@ -166,8 +149,7 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
         next
       end
 
-      pattern = "Initial Tier:"
-      if line.start_with?(pattern)
+      if (pattern = "Initial Tier:") && line.start_with?(pattern)
         result = line.sub(pattern, "").strip.downcase
         result = if result.include? "highest"
                     :highest_available
@@ -209,7 +191,7 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
 
   def set_lun
     # expand
-    args = ["lun", "-expand", "-name", resource[:name]]
+    args = ["lun", "-expand", "-name", resource[:lun_name]]
     origin_length = args.length
     args << "-capacity" << resource[:capacity] if @property_flush[:capacity]
     args << "-sq" << resource[:size_qual] if @property_flush[:size_qual]
@@ -218,10 +200,10 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
     run(args) if args.length > origin_length + 1
 
     # modify
-    args = ["lun", "-modify", "-name", resource[:name]]
+    args = ["lun", "-modify", "-name", resource[:lun_name]]
     origin_length = args.length
     args << "-aa" << (resource[:auto_assign] == :true ? 1 : 0) if @property_flush[:auto_assign]
-    args << "-newName" << resource[:new_name] if @property_flush[:new_name] && (@property_flush[:new_name] != resource[:name])
+    args << "-newName" << resource[:new_name] if @property_flush[:new_name] && (@property_flush[:new_name] != resource[:lun_name])
     args << "-sp" << resource[:default_owner].to_s.upcase if @property_flush[:default_owner]
     args << "-tieringPolicy" << (case resource[:tiering_policy]
     when :no_movement then "noMovement"
@@ -249,24 +231,25 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
 
   def create_lun
     args = ['lun', '-create']
-    if resource[:type] == :snap
+    if resource[:type] == :VNXSnap
       args << "-type" << "Snap"
       args << "-primaryLun" << resource[:primary_lun_number] if resource[:primary_lun_number]
       args << "-primaryLunName" << resource[:primary_lun_name] if resource[:primary_lun_name]
-      args << "-sp" << resource[:default_owner].to_s.upcase if resource[:default_owner]
+      args << "-sp" << resource[:default_owner] if resource[:default_owner]
       args << "-l" << resource[:lun_number] if resource[:lun_number]
-      args << "-name" << resource[:name] if resource[:name]
+      args << "-name" << resource[:lun_name] if resource[:lun_name]
       args << "-allowSnapAutoDelete" << (resource[:allow_snap_auto_delete] == :true ? "yes" : "no") if resource[:allow_snap_auto_delete]
       args << "-allowInbandSnapAttach" << (resource[:allow_inband_snap_attach] == :true ? "yes" : "no") if resource[:allow_inband_snap_attach]
     else
-      args << "-type" << (resource[:type] == :thin ? 'Thin' : 'NonThin') if resource[:type]
+      args << "-type" << (resource[:type] == :THIN ? 'Thin' : 'NonThin') if resource[:type]
       args << "-capacity" << resource[:capacity] if resource[:capacity]
+      args << "-sq" << resource[:size_qual] if resource[:size_qual]
       args << "-poolId" << resource[:pool_id] if resource[:pool_id]
       args << "-poolName" << resource[:pool_name] if resource[:pool_name]
-      args << "-sp" << resource[:default_owner].to_s.upcase if resource[:default_owner]
+      args << "-sp" << resource[:default_owner] if resource[:default_owner]
       args << "-aa" << (resource[:auto_assign] == :true ? 1 : 0) if resource[:auto_assign]
       args << "-l" << resource[:lun_number] if resource[:lun_number]
-      args << "-name" << resource[:name]
+      args << "-name" << resource[:lun_name] if resource[:lun_name]
       args << "-offset" << resource[:offset] if resource[:offset]
       args << "-tieringPolicy" << (case resource[:tiering_policy]
       when :no_movement then "noMovement"
@@ -302,7 +285,7 @@ Puppet::Type.type(:vnx_lun).provide(:vnx_lun) do
     # destroy
     if @property_flush[:ensure] == :absent
       args = ["lun", "-destroy"]
-      args << "-name" << resource[:name]
+      args << "-name" << resource[:lun_name]
       args << "-o"
       run args
       @property_hash[:ensure] = :absent

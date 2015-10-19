@@ -45,7 +45,7 @@ Puppet::Type.type(:vnx_storagepool).provide(:vnx_storagepool) do
 
       if line.start_with?('Percent Full Threshold:')
         value = line.gsub("Percent Full Threshold:", '').strip
-        sp_info[:percent_full_threshhold] = value
+        sp_info[:percent_full_threshold] = value
       end
 
       if line.start_with?('Description:')
@@ -88,106 +88,91 @@ Puppet::Type.type(:vnx_storagepool).provide(:vnx_storagepool) do
         sp_info[:current_operation_percent_completed] = value
       end
 
-      pattern = 'Raw Capacity (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'Raw Capacity (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:raw_capacity_blocks] = value
         next
       end
 
-      pattern = 'Raw Capacity (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'Raw Capacity (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:raw_capacity_gbs] = value
         next
       end
 
-      pattern = 'User Capacity (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'User Capacity (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:user_capacity_blocks] = value
         next
       end
 
-      pattern = 'User Capacity (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'User Capacity (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:user_capacity_gbs] = value
         next
       end
 
-      pattern = 'Consumed Capacity (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'Consumed Capacity (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:consumed_capacity_blocks] = value
         next
       end
 
-      pattern = 'Consumed Capacity (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'Consumed Capacity (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:consumed_capacity_gbs] = value
         next
       end
 
-      pattern = 'Available Capacity (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'Available Capacity (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:available_capacity_blocks] = value
         next
       end
 
-      pattern = 'Available Capacity (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'Available Capacity (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:available_capacity_gbs] = value
         next
       end
 
-      pattern = 'Percent Full:'
-      if line.start_with?(pattern)
+      if (pattern = 'Percent Full:') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:percent_full] = value
         next
       end
 
-      pattern = 'Total Subscribed Capacity (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'Total Subscribed Capacity (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:total_subscribed_capacity_blocks] = value
         next
       end
 
-      pattern = 'Total Subscribed Capacity (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'Total Subscribed Capacity (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:total_subscribed_capacity_gbs] = value
         next
       end
 
-      pattern = 'Percent Subscribed:'
-      if line.start_with?(pattern)
+      if (pattern = 'Percent Subscribed:') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:percent_subscribed] = value
         next
       end
 
-      pattern = 'Oversubscribed by (Blocks):'
-      if line.start_with?(pattern)
+      if (pattern = 'Oversubscribed by (Blocks):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:oversubscribed_by_blocks] = value
         next
       end
 
-      pattern = 'Oversubscribed by (GBs):'
-      if line.start_with?(pattern)
+      if (pattern = 'Oversubscribed by (GBs):') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:oversubscribed_by_gbs] = value
         next
       end
 
-      pattern = 'Disks:'
-      if line.start_with?(pattern)
+      if (pattern = 'Disks:') && line.start_with?(pattern)
         disks = []
         while /Bus (\d+) Enclosure (\d+) Disk (\d+)/ =~ sp_lines.first
           sp_lines.shift
@@ -197,8 +182,7 @@ Puppet::Type.type(:vnx_storagepool).provide(:vnx_storagepool) do
         next
       end
 
-      pattern = 'LUNs:'
-      if line.start_with?(pattern)
+      if (pattern = 'LUNs:') && line.start_with?(pattern)
         value = line.gsub(pattern, '').strip
         sp_info[:luns] = value.split(",").map{|v| v.strip.to_i}
         next
@@ -253,7 +237,7 @@ Puppet::Type.type(:vnx_storagepool).provide(:vnx_storagepool) do
     origin_length = args.length + 1
     args << "-newName" << resource[:new_name] if resource[:new_name] && (resource[:new_name] != resource[:name])
     args << "-description" << resource[:description] if @property_flush[:description]
-    args << "-prcntFullThreshold" << resource[:percent_full_threshhold] if @property_flush[:percent_full_threshhold]
+    args << "-prcntFullThreshold" << resource[:percent_full_threshold] if @property_flush[:percent_full_threshold]
     args << "-autoTiering" << resource[:auto_tiering] if @property_flush[:auto_tiering]
     args << "-fastcache" << (resource[:ensure_fastcache] == :true ? "on" : "off") if @property_flush[:ensure_fastcache]
     args << "-snapPoolFullThresholdEnabled" << (resource[:snappool_fullthreshold] == :enabled ? "on" : "off") if @property_flush[:snappool_fullthreshold]
@@ -275,7 +259,7 @@ Puppet::Type.type(:vnx_storagepool).provide(:vnx_storagepool) do
     create_pool << "-rtype" << resource[:raid_type] if resource[:raid_type]
     create_pool << "-rdrivecount" << resource[:rdrive_count] if resource[:rdrive_count]
     create_pool << "-description" << resource[:description] if resource[:description]
-    create_pool << "-prcntFullThreshold" << resource[:percent_full_threshhold] if resource[:percent_full_threshhold]
+    create_pool << "-prcntFullThreshold" << resource[:percent_full_threshold] if resource[:percent_full_threshold]
     create_pool << "-skipRules" if resource[:skip_rules] == :true
     create_pool << "-autoTiering" << resource[:auto_tiering] if resource[:auto_tiering]
     create_pool << "-fastcache" << "on" if resource[:ensure_fastcache] == :true
