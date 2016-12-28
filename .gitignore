@@ -7,3 +7,4 @@ spec/fixtures/
 coverage/
 .*.sw*
 .vendor/
+manifests_p3/
